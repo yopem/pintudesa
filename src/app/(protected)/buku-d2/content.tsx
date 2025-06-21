@@ -9,19 +9,19 @@ import ShowOptions from "@/components/show-options"
 import { useToast } from "@/components/toast-provider"
 import { Button } from "@/components/ui/button"
 import { ControlledTable } from "@/components/ui/controlled-table"
-import { tableColumnRegistry } from "@/lib/data/adminstrasi-umum/table-column-registry"
-import { tableDataMapperRegistry } from "@/lib/data/adminstrasi-umum/table-data-mapper"
-import type { SelectInventaris } from "@/lib/db/schema/inventaris"
+import { tableColumnRegistry } from "@/lib/data/admintrasi-pembangunan/table-column-registry"
+import type { SelectKegiatanPembangunan } from "@/lib/db/schema/kegiatan-pembangunan"
 import { useTRPC } from "@/lib/trpc/client"
 import { useHandleTRPCError } from "@/lib/utils/error"
 
-export default function InventarisContent() {
+export default function KegiatanPembangunanContent() {
   const [pagination, setPagination] = React.useState<PaginationState>({
     pageIndex: 0,
     pageSize: 10,
   })
   const columns = React.useMemo(
-    () => tableColumnRegistry.inventaris as ColumnDef<SelectInventaris>[],
+    () =>
+      tableColumnRegistry.kegiatanPembangunan as ColumnDef<SelectKegiatanPembangunan>[],
     [],
   )
 
@@ -30,45 +30,43 @@ export default function InventarisContent() {
   const { toast } = useToast()
   const handleError = useHandleTRPCError()
 
-  const { data: inventarissCount, refetch: refetchInventarissCount } = useQuery(
-    trpc.inventaris.count.queryOptions(),
-  )
+  const {
+    data: kegiatanPembangunansCount,
+    refetch: refetchKegiatanPembangunansCount,
+  } = useQuery(trpc.kegiatanPembangunan.count.queryOptions())
 
   const {
     data: rawData,
     isLoading,
-    refetch: refetchInventariss,
+    refetch: refetchKegiatanPembangunans,
   } = useQuery(
-    trpc.inventaris.all.queryOptions({
+    trpc.kegiatanPembangunan.all.queryOptions({
       page: pagination.pageIndex + 1,
       perPage: pagination.pageSize,
     }),
   )
   const { mutate: deleteItem } = useMutation(
-    trpc.inventaris.delete.mutationOptions({
+    trpc.kegiatanPembangunan.delete.mutationOptions({
       onSuccess: async () => {
-        await refetchInventariss()
-        await refetchInventarissCount()
+        await refetchKegiatanPembangunans()
+        await refetchKegiatanPembangunansCount()
         toast({
-          description: "Berhasil menghapus inventaris",
+          description: "Berhasil menghapus Kegiatan Pembangunan",
         })
       },
       onError: (error) => {
-        handleError(error, "Gagal menghapus inventaris")
+        handleError(error, "Gagal menghapus Kegiatan Pembangunan")
       },
     }),
   )
   const lastPage = React.useMemo(() => {
-    if (!inventarissCount) return 0
-    return Math.ceil(inventarissCount / pagination.pageSize)
-  }, [inventarissCount, pagination.pageSize])
+    if (!kegiatanPembangunansCount) return 0
+    return Math.ceil(kegiatanPembangunansCount / pagination.pageSize)
+  }, [kegiatanPembangunansCount, pagination.pageSize])
 
-  const mapFn = tableDataMapperRegistry.inventaris
   const data = React.useMemo(() => {
-    return (
-      typeof mapFn === "function" ? mapFn(rawData ?? []) : (rawData ?? [])
-    ) as SelectInventaris[]
-  }, [mapFn, rawData])
+    return (rawData ?? []) as SelectKegiatanPembangunan[]
+  }, [rawData])
 
   React.useEffect(() => {
     if (
@@ -86,13 +84,13 @@ export default function InventarisContent() {
   return (
     <div className="flex w-full flex-col gap-4">
       <div className="mb-8 flex items-center justify-between">
-        <h1 className="text-lg font-bold">A3. Buku Inventaris</h1>
+        <h1 className="text-lg font-bold">D2. Buku Kegiatan Pembangunan</h1>
         <Button asChild>
-          <Link href="/buku-a3/tambah">Tambah</Link>
+          <Link href="/buku-d2/tambah">Tambah</Link>
         </Button>
       </div>
       <div className="relative min-h-[100vh] w-full overflow-auto">
-        <ControlledTable<SelectInventaris>
+        <ControlledTable<SelectKegiatanPembangunan>
           data={data}
           setPagination={setPagination}
           pagination={pagination}
@@ -103,8 +101,8 @@ export default function InventarisContent() {
           renderAction={(item) => (
             <ShowOptions
               onDelete={() => deleteItem(item.id)}
-              editUrl={`/buku-a3/edit/${item.id}`}
-              description={item.jenisInventaris}
+              editUrl={`/buku-d2/edit/${item.id}`}
+              description={item.namaKegiatan}
             />
           )}
         />
