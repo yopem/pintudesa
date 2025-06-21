@@ -9,19 +9,20 @@ import ShowOptions from "@/components/show-options"
 import { useToast } from "@/components/toast-provider"
 import { Button } from "@/components/ui/button"
 import { ControlledTable } from "@/components/ui/controlled-table"
-import { tableColumnRegistry } from "@/lib/data/adminstrasi-umum/table-column-registry"
-import { tableDataMapperRegistry } from "@/lib/data/adminstrasi-umum/table-data-mapper"
-import type { SelectInventaris } from "@/lib/db/schema/inventaris"
+import { tableColumnRegistry } from "@/lib/data/admintrasi-pembangunan/table-column-registry"
+import { tableDataMapperRegistry } from "@/lib/data/admintrasi-pembangunan/table-data-mapper"
+import type { SelectKaderPemberdayaanMasyarakat } from "@/lib/db/schema/kader-pemberdayaan-masyarakat"
 import { useTRPC } from "@/lib/trpc/client"
 import { useHandleTRPCError } from "@/lib/utils/error"
 
-export default function InventarisContent() {
+export default function KaderPemberdayaanMasyarakatContent() {
   const [pagination, setPagination] = React.useState<PaginationState>({
     pageIndex: 0,
     pageSize: 10,
   })
   const columns = React.useMemo(
-    () => tableColumnRegistry.inventaris as ColumnDef<SelectInventaris>[],
+    () =>
+      tableColumnRegistry.kaderPemberdayaanMasyarakat as ColumnDef<SelectKaderPemberdayaanMasyarakat>[],
     [],
   )
 
@@ -30,44 +31,45 @@ export default function InventarisContent() {
   const { toast } = useToast()
   const handleError = useHandleTRPCError()
 
-  const { data: inventarissCount, refetch: refetchInventarissCount } = useQuery(
-    trpc.inventaris.count.queryOptions(),
-  )
+  const {
+    data: kaderPemberdayaanMasyarakatsCount,
+    refetch: refetchKaderPemberdayaanMasyarakatsCount,
+  } = useQuery(trpc.kaderPemberdayaanMasyarakat.count.queryOptions())
 
   const {
     data: rawData,
     isLoading,
-    refetch: refetchInventariss,
+    refetch: refetchKaderPemberdayaanMasyarakats,
   } = useQuery(
-    trpc.inventaris.all.queryOptions({
+    trpc.kaderPemberdayaanMasyarakat.all.queryOptions({
       page: pagination.pageIndex + 1,
       perPage: pagination.pageSize,
     }),
   )
   const { mutate: deleteItem } = useMutation(
-    trpc.inventaris.delete.mutationOptions({
+    trpc.kaderPemberdayaanMasyarakat.delete.mutationOptions({
       onSuccess: async () => {
-        await refetchInventariss()
-        await refetchInventarissCount()
+        await refetchKaderPemberdayaanMasyarakats()
+        await refetchKaderPemberdayaanMasyarakatsCount()
         toast({
-          description: "Berhasil menghapus inventaris",
+          description: "Berhasil menghapus kader pemberdayaan masyarakat",
         })
       },
       onError: (error) => {
-        handleError(error, "Gagal menghapus inventaris")
+        handleError(error, "Gagal menghapus kader pemberdayaan masyarakat")
       },
     }),
   )
   const lastPage = React.useMemo(() => {
-    if (!inventarissCount) return 0
-    return Math.ceil(inventarissCount / pagination.pageSize)
-  }, [inventarissCount, pagination.pageSize])
+    if (!kaderPemberdayaanMasyarakatsCount) return 0
+    return Math.ceil(kaderPemberdayaanMasyarakatsCount / pagination.pageSize)
+  }, [kaderPemberdayaanMasyarakatsCount, pagination.pageSize])
 
-  const mapFn = tableDataMapperRegistry.inventaris
+  const mapFn = tableDataMapperRegistry.kaderPemberdayaanMasyarakat
   const data = React.useMemo(() => {
     return (
       typeof mapFn === "function" ? mapFn(rawData ?? []) : (rawData ?? [])
-    ) as SelectInventaris[]
+    ) as SelectKaderPemberdayaanMasyarakat[]
   }, [mapFn, rawData])
 
   React.useEffect(() => {
@@ -86,13 +88,15 @@ export default function InventarisContent() {
   return (
     <div className="flex w-full flex-col gap-4">
       <div className="mb-8 flex items-center justify-between">
-        <h1 className="text-lg font-bold">A3. Buku Inventaris</h1>
+        <h1 className="text-lg font-bold">
+          D4. Buku Kader Pemberdayaan Masyarakat
+        </h1>
         <Button asChild>
-          <Link href="/buku-a3/tambah">Tambah</Link>
+          <Link href="/buku-d4/tambah">Tambah</Link>
         </Button>
       </div>
       <div className="relative min-h-[100vh] w-full overflow-auto">
-        <ControlledTable<SelectInventaris>
+        <ControlledTable<SelectKaderPemberdayaanMasyarakat>
           data={data}
           setPagination={setPagination}
           pagination={pagination}
@@ -103,8 +107,8 @@ export default function InventarisContent() {
           renderAction={(item) => (
             <ShowOptions
               onDelete={() => deleteItem(item.id)}
-              editUrl={`/buku-a3/edit/${item.id}`}
-              description={item.jenisInventaris}
+              editUrl={`/buku-d4/edit/${item.id}`}
+              description={item.nama}
             />
           )}
         />
