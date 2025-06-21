@@ -10,18 +10,17 @@ import { useToast } from "@/components/toast-provider"
 import { Button } from "@/components/ui/button"
 import { ControlledTable } from "@/components/ui/controlled-table"
 import { tableColumnRegistry } from "@/lib/data/adminstrasi-umum/table-column-registry"
-import { tableDataMapperRegistry } from "@/lib/data/adminstrasi-umum/table-data-mapper"
-import type { SelectInventaris } from "@/lib/db/schema/inventaris"
+import type { SelectRAB } from "@/lib/db/schema/rab"
 import { useTRPC } from "@/lib/trpc/client"
 import { useHandleTRPCError } from "@/lib/utils/error"
 
-export default function InventarisContent() {
+export default function RABContent() {
   const [pagination, setPagination] = React.useState<PaginationState>({
     pageIndex: 0,
     pageSize: 10,
   })
   const columns = React.useMemo(
-    () => tableColumnRegistry.inventaris as ColumnDef<SelectInventaris>[],
+    () => tableColumnRegistry.rab as ColumnDef<SelectRAB>[],
     [],
   )
 
@@ -30,45 +29,42 @@ export default function InventarisContent() {
   const { toast } = useToast()
   const handleError = useHandleTRPCError()
 
-  const { data: inventarissCount, refetch: refetchInventarissCount } = useQuery(
-    trpc.inventaris.count.queryOptions(),
+  const { data: RABsCount, refetch: refetchRABsCount } = useQuery(
+    trpc.rab.count.queryOptions(),
   )
 
   const {
     data: rawData,
     isLoading,
-    refetch: refetchInventariss,
+    refetch: refetchRABs,
   } = useQuery(
-    trpc.inventaris.all.queryOptions({
+    trpc.rab.all.queryOptions({
       page: pagination.pageIndex + 1,
       perPage: pagination.pageSize,
     }),
   )
   const { mutate: deleteItem } = useMutation(
-    trpc.inventaris.delete.mutationOptions({
+    trpc.rab.delete.mutationOptions({
       onSuccess: async () => {
-        await refetchInventariss()
-        await refetchInventarissCount()
+        await refetchRABs()
+        await refetchRABsCount()
         toast({
-          description: "Berhasil menghapus inventaris",
+          description: "Berhasil menghapus rencana anggaran biaya",
         })
       },
       onError: (error) => {
-        handleError(error, "Gagal menghapus inventaris")
+        handleError(error, "Gagal menghapus rencana anggaran biaya")
       },
     }),
   )
   const lastPage = React.useMemo(() => {
-    if (!inventarissCount) return 0
-    return Math.ceil(inventarissCount / pagination.pageSize)
-  }, [inventarissCount, pagination.pageSize])
+    if (!RABsCount) return 0
+    return Math.ceil(RABsCount / pagination.pageSize)
+  }, [RABsCount, pagination.pageSize])
 
-  const mapFn = tableDataMapperRegistry.inventaris
   const data = React.useMemo(() => {
-    return (
-      typeof mapFn === "function" ? mapFn(rawData ?? []) : (rawData ?? [])
-    ) as SelectInventaris[]
-  }, [mapFn, rawData])
+    return (rawData ?? []) as SelectRAB[]
+  }, [rawData])
 
   React.useEffect(() => {
     if (
@@ -86,13 +82,13 @@ export default function InventarisContent() {
   return (
     <div className="flex w-full flex-col gap-4">
       <div className="mb-8 flex items-center justify-between">
-        <h1 className="text-lg font-bold">A3. Buku Inventaris</h1>
+        <h1 className="text-lg font-bold">C2. Buku RAB</h1>
         <Button asChild>
-          <Link href="/buku-a3/tambah">Tambah</Link>
+          <Link href="/buku-c2/tambah">Tambah</Link>
         </Button>
       </div>
       <div className="relative min-h-[100vh] w-full overflow-auto">
-        <ControlledTable<SelectInventaris>
+        <ControlledTable<SelectRAB>
           data={data}
           setPagination={setPagination}
           pagination={pagination}
@@ -103,8 +99,8 @@ export default function InventarisContent() {
           renderAction={(item) => (
             <ShowOptions
               onDelete={() => deleteItem(item.id)}
-              editUrl={`/buku-a3/edit/${item.id}`}
-              description={item.jenisInventaris}
+              editUrl={`/buku-c2/edit/${item.id}`}
+              description={item.kegiatan}
             />
           )}
         />
